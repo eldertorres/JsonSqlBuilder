@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SqlQueryBuilder.Test
 {
-    public class UnitTest1
+    public class SqlQueryParserTest
     {
         [Fact]
         public void ParseJsonIntoSimpleSqlWithWhere()
