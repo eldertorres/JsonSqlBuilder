@@ -5,6 +5,6 @@
         InnerJoin,
         LeftJoin,
         RightJoin,
-        OuterJoin
+        FullOuterJoin
     }
 }

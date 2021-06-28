@@ -74,9 +74,19 @@ Complete JSON example:
             ]
         },
         {
-            "operator": "Equals",
+            "operator": "Like",
             "columnName": "Products.Name",
-            "columnValue": "S21"
+            "columnValue": "S%"
+        }
+    ],
+    "orders": [
+        {
+            "orderType": "Desc",
+            "columnName": "Products.Name"
+        },
+        {
+            "orderType": "Asc",
+            "columnName": "Products.Id"
         }
     ],
     "limit": 4,
@@ -86,9 +96,21 @@ Complete JSON example:
 
 Result:
 ```sql
-SELECT * FROM (SELECT [Suppliers].[Id], [Suppliers].[Name] AS [Supplier], [Countries].[Name] AS [CountryName], [Products].[Name] AS [ProductName], ROW_NUMBER() OVER (ORDER BY (SELECT 0)) AS [row_num] FROM [Suppliers]
-LEFT JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId]
-INNER JOIN [Countries] ON [Suppliers].[CountryId] = [Countries].[Id] WHERE ([Products].[Id] IN ('1', '2', '3', '4') OR [Products].[Id] >= '4') AND (LOWER([Products].[Name]) like 's%')) AS [results_wrapper] WHERE [row_num] BETWEEN 2 AND 5
+SELECT  *
+FROM
+    (
+        SELECT  [Suppliers].[Id]
+                ,[Suppliers].[Name]                                                  AS [Supplier]
+                ,[Countries].[Name]                                                  AS [CountryName]
+                ,[Products].[Name]                                                   AS [ProductName]
+                ,ROW_NUMBER() OVER (ORDER BY [Products].[Name] DESC,[Products].[Id]) AS [row_num]
+        FROM [Suppliers]
+            LEFT  JOIN [Products]  ON [Suppliers].[Id] = [Products].[SupplierId]
+            INNER JOIN [Countries] ON [Suppliers].[CountryId] = [Countries].[Id]
+        WHERE ([Products].[Id] IN ('1', '2', '3', '4') OR [Products].[Id] >= '4')
+          AND (LOWER([Products].[Name]) like 's%')
+    ) AS [results_wrapper]
+WHERE [row_num] BETWEEN 2 AND 5 
 ```
 
 
@@ -106,6 +128,13 @@ In
 NotIn
 Between
 NotBetween
+```
+### Supported Join Operators
+```bash
+InnerJoin
+LeftJoin
+RightJoin
+FullOuterJoin
 ```
 
 #

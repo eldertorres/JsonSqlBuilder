@@ -26,7 +26,7 @@ namespace SqlQueryBuilder.SqlQueryParser
             
             var result = _queryFactory.Compiler.Compile(query);
            
-            // To execute in production use result.Sql + result.Bindings to avoid sql injection and for optimal and cached execution plan
+            // To execute in production db use result.Sql + result.Bindings to avoid sql injection and for optimal and cached execution plan
             var sql = result.ToString();
 
             return sql;
@@ -39,8 +39,8 @@ namespace SqlQueryBuilder.SqlQueryParser
                 query.Select(queryData.Columns.Select(column => column.Name).ToArray());
 
             ParseJoins(queryData.Joins, query);
-
             ParseWheres(queryData.Wheres, query);
+            ParseOrders(queryData.Orders, query);
 
             query.Limit(queryData.Limit);
             query.Offset(queryData.Offset);
@@ -56,6 +56,17 @@ namespace SqlQueryBuilder.SqlQueryParser
                 query.Join(join.Table, join.FromColumn, join.ToColumn,
                     EnumToSql.ComparisonOperatorToSqlOperator(join.ComparisonOperator), 
                     EnumToSql.JoinOperatorToSqlJoin(join.JoinOperator));
+            }
+        }
+        private void ParseOrders(List<Order> orders, Query query)
+        {
+            if (!orders.Any()) return;
+            foreach (var order in orders)
+            {
+                if (order.OrderType == OrderType.Desc)
+                    query.OrderByDesc(order.ColumnName);
+                else
+                    query.OrderBy(order.ColumnName);
             }
         }
 

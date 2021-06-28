@@ -31,7 +31,7 @@ namespace SqlQueryBuilder.QueryBuilder
                 JoinOperator.InnerJoin => "inner join",
                 JoinOperator.LeftJoin => "left join",
                 JoinOperator.RightJoin => "right join",
-                JoinOperator.OuterJoin => "outer join",
+                JoinOperator.FullOuterJoin => "full outer join",
                 _ => "inner join"
             };
         }

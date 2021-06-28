@@ -10,6 +10,7 @@ namespace SqlQueryBuilder.QueryBuilder
             Columns = new List<Column>();
             Joins = new List<Join>();
             Wheres = new List<Where>();
+            Orders = new List<Order>();
         }
 
         [JsonPropertyName("columns")]
@@ -23,6 +24,9 @@ namespace SqlQueryBuilder.QueryBuilder
         
         [JsonPropertyName("wheres")]
         public List<Where> Wheres { get; set; }
+        
+        [JsonPropertyName("orders")]
+        public List<Order> Orders { get; set; }
 
         [JsonPropertyName("limit")]
         public int Limit { get; set; }

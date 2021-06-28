@@ -28,10 +28,64 @@ namespace SqlQueryBuilder.Test
         }
 
         [Fact]
-        public void ParseJsonIntoSqlWithJoins()
+        public void ParseJsonIntoSqlWithLeftJoin()
         {
-            var json = "{\"table\": \"Suppliers\",\"columns\": [{\"name\": \"Id\"},{\"name\": \"Name\"},{\"name\": \"Products.Name\"}],\"joins\": [{\"joinOperator\": \"LeftJoin\",\"table\": \"Products\",\"fromColumn\": \"Suppliers.Id\",\"operator\": \"Equals\",\"toColumn\": \"Products.SupplierId\"}],\"wheres\": [{\"operator\": \"NotEqual\",\"columnName\": \"Id\",\"columnValue\": \"2530\"}]}";
-            var expectedSql = "SELECT [Id], [Name], [Products].[Name] FROM [Suppliers] LEFT JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId] WHERE ([Id] <> '2530')";
+            var json = "{\"table\": \"Suppliers\",\"joins\": [{\"joinOperator\": \"LeftJoin\",\"table\": \"Products\",\"fromColumn\": \"Suppliers.Id\",\"operator\": \"Equals\",\"toColumn\": \"Products.SupplierId\"}],\"wheres\": [{\"operator\": \"NotEqual\",\"columnName\": \"Products.Id\",\"columnValue\": \"2530\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] LEFT JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId] WHERE ([Products].[Id] <> '2530')";
+            
+            Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
+            mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
+
+            var compiler = new SqlServerCompiler().Whitelist("in", "like");
+            var queryFactory = new SimpleQueryFactory(compiler);
+            SqlQueryBuilderParser sqlQueryBuilderParser = new SqlQueryBuilderParser(queryFactory);
+            
+            var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(json).Replace("\n", string.Empty);
+
+            Assert.Equal(expectedSql, sqlQuery);
+        }
+        
+        [Fact]
+        public void ParseJsonIntoSqlWithRightJoin()
+        {
+            var json = "{\"table\": \"Suppliers\",\"joins\": [{\"joinOperator\": \"RightJoin\",\"table\": \"Products\",\"fromColumn\": \"Suppliers.Id\",\"operator\": \"Equals\",\"toColumn\": \"Products.SupplierId\"}],\"wheres\": [{\"operator\": \"NotEqual\",\"columnName\": \"Products.Id\",\"columnValue\": \"2530\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] RIGHT JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId] WHERE ([Products].[Id] <> '2530')";
+            
+            Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
+            mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
+
+            var compiler = new SqlServerCompiler().Whitelist("in", "like");
+            var queryFactory = new SimpleQueryFactory(compiler);
+            SqlQueryBuilderParser sqlQueryBuilderParser = new SqlQueryBuilderParser(queryFactory);
+            
+            var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(json).Replace("\n", string.Empty);
+
+            Assert.Equal(expectedSql, sqlQuery);
+        }
+        
+        [Fact]
+        public void ParseJsonIntoSqlWithInnerJoin()
+        {
+            var json = "{\"table\": \"Suppliers\",\"joins\": [{\"joinOperator\": \"InnerJoin\",\"table\": \"Products\",\"fromColumn\": \"Suppliers.Id\",\"operator\": \"Equals\",\"toColumn\": \"Products.SupplierId\"}],\"wheres\": [{\"operator\": \"NotEqual\",\"columnName\": \"Products.Id\",\"columnValue\": \"2530\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] INNER JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId] WHERE ([Products].[Id] <> '2530')";
+            
+            Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
+            mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
+
+            var compiler = new SqlServerCompiler().Whitelist("in", "like");
+            var queryFactory = new SimpleQueryFactory(compiler);
+            SqlQueryBuilderParser sqlQueryBuilderParser = new SqlQueryBuilderParser(queryFactory);
+            
+            var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(json).Replace("\n", string.Empty);
+
+            Assert.Equal(expectedSql, sqlQuery);
+        }
+        
+        [Fact]
+        public void ParseJsonIntoSqlWithFullOuterJoin()
+        {
+            var json = "{\"table\": \"Suppliers\",\"joins\": [{\"joinOperator\": \"FullOuterJoin\",\"table\": \"Products\",\"fromColumn\": \"Suppliers.Id\",\"operator\": \"Equals\",\"toColumn\": \"Products.SupplierId\"}],\"wheres\": [{\"operator\": \"NotEqual\",\"columnName\": \"Products.Id\",\"columnValue\": \"2530\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] FULL OUTER JOIN [Products] ON [Suppliers].[Id] = [Products].[SupplierId] WHERE ([Products].[Id] <> '2530')";
             
             Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
             mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
@@ -141,6 +195,42 @@ namespace SqlQueryBuilder.Test
         {
             var json = "{\"table\": \"Suppliers\",\"wheres\": [{\"operator\": \"NotLike\",\"columnName\": \"Name\",\"columnValue\": \"Supp%\"}]}";
             var expectedSql = "SELECT * FROM [Suppliers] WHERE (NOT (LOWER([Name]) like 'supp%'))";
+            
+            Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
+            mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
+
+            var compiler = new SqlServerCompiler().Whitelist("in", "like");
+            var queryFactory = new SimpleQueryFactory(compiler);
+            SqlQueryBuilderParser sqlQueryBuilderParser = new SqlQueryBuilderParser(queryFactory);
+            
+            var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(json).Replace("\n", string.Empty);
+
+            Assert.Equal(expectedSql, sqlQuery);
+        }
+        
+        [Fact]
+        public void ParseJsonIntoSqlWhereAndOrderByAsc()
+        {
+            var json = "{\"table\": \"Suppliers\",\"wheres\": [{\"operator\": \"Equals\",\"columnName\": \"Id\",\"columnValue\": \"10\"}], \"orders\": [{\"orderType\": \"Asc\", \"columnName\": \"Id\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] WHERE ([Id] = '10') ORDER BY [Id]";
+            
+            Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
+            mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
+
+            var compiler = new SqlServerCompiler().Whitelist("in", "like");
+            var queryFactory = new SimpleQueryFactory(compiler);
+            SqlQueryBuilderParser sqlQueryBuilderParser = new SqlQueryBuilderParser(queryFactory);
+            
+            var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(json).Replace("\n", string.Empty);
+
+            Assert.Equal(expectedSql, sqlQuery);
+        }
+        
+        [Fact]
+        public void ParseJsonIntoSqlWhereAndOrderByTwoColumnsAndDesc()
+        {
+            var json = "{\"table\": \"Suppliers\",\"wheres\": [{\"operator\": \"Equals\",\"columnName\": \"Id\",\"columnValue\": \"10\"}], \"orders\": [{\"orderType\": \"Asc\", \"columnName\": \"Name\"}, {\"orderType\": \"Desc\", \"columnName\": \"Id\"}]}";
+            var expectedSql = "SELECT * FROM [Suppliers] WHERE ([Id] = '10') ORDER BY [Name], [Id] DESC";
             
             Moq.Mock<ISqlQueryBuilderParser> mock = new Moq.Mock<ISqlQueryBuilderParser>();
             mock.Setup(x => x.ParseJsonIntoSqlQuery(json)).Returns(expectedSql);
