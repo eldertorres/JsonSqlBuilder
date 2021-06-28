@@ -14,9 +14,16 @@ namespace SqlQueryBuilder
         {
             var serviceCollection = ManageServices();
 
+            var sqlQueryParser = serviceCollection.GetService<ISqlQueryBuilderParser>();
+            if (sqlQueryParser == null)
+            {
+                Console.WriteLine("Sql parser not ready");
+                Environment.Exit(1);
+            }
+            
             var queryBuilderMenu = new ConsoleMenu(args, 0)
-                .Add("Parse JSON file", () => ParseJsonFile(serviceCollection))
-                .Add("Parse JSON inline", () => ParseJsonInline(serviceCollection))
+                .Add("Parse JSON file", () => ParseJsonFile(sqlQueryParser))
+                .Add("Parse JSON inline", () => ParseJsonInline(sqlQueryParser))
                 .Add("Exit", () => Environment.Exit(0))
                 .Configure(config =>
                     {
@@ -28,25 +35,18 @@ namespace SqlQueryBuilder
             queryBuilderMenu.Show();
         }
 
-        private static void ParseJsonFile(IServiceProvider serviceProvider)
-        {
-            var sqlQueryParser = serviceProvider.GetService<ISqlQueryBuilderParser>();
-            if (sqlQueryParser == null)
-            {
-                Console.WriteLine("Sql parser not ready");
-                return;
-            }
-            
+        private static void ParseJsonFile(ISqlQueryBuilderParser sqlQueryBuilderParser)
+        {   
             Console.WriteLine("Json file path: ");
             var jsonFilePath = Console.ReadLine();
             
             try
             {
                 if (!File.Exists(jsonFilePath))
-                    throw new IOException("File not found");
+                    throw new IOException("JSON file not found");
                 
-                var jsonFile = File.ReadAllText(jsonFilePath);
-                var sqlQuery = sqlQueryParser.ParseJsonIntoSqlQuery(jsonFile);
+                var jsonData = File.ReadAllText(jsonFilePath);
+                var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(jsonData);
                 
                 Console.WriteLine($"Parsed query:\n{sqlQuery}");
             }
@@ -57,21 +57,14 @@ namespace SqlQueryBuilder
             Console.ReadKey();
         }
         
-        private static void ParseJsonInline(IServiceProvider serviceProvider)
+        private static void ParseJsonInline(ISqlQueryBuilderParser sqlQueryBuilderParser)
         {
-            var sqlQueryParser = serviceProvider.GetService<ISqlQueryBuilderParser>();
-            if (sqlQueryParser == null)
-            {
-                Console.WriteLine("Sql parser not ready");
-                return;
-            }
-            
             Console.WriteLine("Write raw Json: ");
             var jsonData = Console.ReadLine();
             
             try
             {
-                var sqlQuery = sqlQueryParser.ParseJsonIntoSqlQuery(jsonData);
+                var sqlQuery = sqlQueryBuilderParser.ParseJsonIntoSqlQuery(jsonData);
                 Console.WriteLine($"Parsed query:\n{sqlQuery}");
             }
             catch (Exception e)
